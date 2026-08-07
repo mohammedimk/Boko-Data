@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Cable Subscription - VTU Hub{% endblock %}
+{% block page_title %}Cable Subscription{% endblock %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="form-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="section-title mb-0">Cable TV Subscription</h6>
+                <span class="balance-chip">Balance: ₦{{ profile.wallet_balance|floatformat:2 }}</span>
+            </div>
+
+            <form method="post" id="cableForm">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Provider</label>
+                    {{ form.provider }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Smart Card / IUC Number</label>
+                    <div class="input-group">
+                        {{ form.smartcard_number }}
+                        <button type="button" class="btn btn-outline-secondary" id="validateCardBtn">Validate</button>
+                    </div>
+                    <div id="cardValidationResult" class="validation-result"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Bouquet</label>
+                    <div id="bouquetsGrid" class="plans-grid">
+                        <div class="text-muted small py-3 text-center w-100" id="bouquetsLoading">
+                            <i class="fa-solid fa-spinner fa-spin"></i> Loading bouquets...
+                        </div>
+                    </div>
+                    {{ form.bouquet_id }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Phone Number for Notification</label>
+                    {{ form.phone_number }}
+                    {% if form.phone_number.errors %}<div class="field-error">{{ form.phone_number.errors.0 }}</div>{% endif %}
+                </div>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fa-solid fa-tv"></i> Subscribe
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/cable.js' %}"></script>
+{% endblock %}

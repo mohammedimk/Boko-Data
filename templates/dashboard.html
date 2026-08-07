@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - VTU Hub{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="row g-4">
+    <!-- Wallet Card -->
+    <div class="col-lg-7">
+        <div class="wallet-card">
+            <div class="wallet-card-top">
+                <div>
+                    <p class="wallet-label">Wallet Balance</p>
+                    <h2 class="wallet-amount">₦{{ profile.wallet_balance|floatformat:2 }}</h2>
+                </div>
+                <a href="{% url 'wallet' %}" class="btn btn-light btn-fund"><i class="fa-solid fa-plus"></i> Fund Wallet</a>
+            </div>
+            <hr class="wallet-divider">
+            <div class="wallet-account">
+                <p class="wallet-label mb-1">Your Virtual Bank Account</p>
+                <div class="account-row">
+                    <div>
+                        <span class="account-bank">{{ profile.allocated_bank_name }}</span>
+                        <div class="account-number" id="accountNumber">{{ profile.allocated_account_number }}</div>
+                        <span class="account-name">{{ profile.allocated_account_name }}</span>
+                    </div>
+                    <button class="btn btn-sm btn-copy" onclick="copyAccountNumber()">
+                        <i class="fa-regular fa-copy"></i> Copy
+                    </button>
+                </div>
+                <small class="wallet-hint">Transfer any amount to this account to fund your wallet instantly.</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Services -->
+    <div class="col-lg-5">
+        <div class="quick-services-card">
+            <h6 class="section-title">Quick Services</h6>
+            <div class="quick-grid">
+                <a href="{% url 'buy_airtime' %}" class="quick-item">
+                    <div class="quick-icon bg-purple"><i class="fa-solid fa-signal"></i></div>
+                    <span>Buy Airtime</span>
+                </a>
+                <a href="{% url 'buy_data' %}" class="quick-item">
+                    <div class="quick-icon bg-blue"><i class="fa-solid fa-wifi"></i></div>
+                    <span>Buy Data</span>
+                </a>
+                <a href="{% url 'cable' %}" class="quick-item">
+                    <div class="quick-icon bg-orange"><i class="fa-solid fa-tv"></i></div>
+                    <span>Cable TV</span>
+                </a>
+                <a href="{% url 'electricity' %}" class="quick-item">
+                    <div class="quick-icon bg-green"><i class="fa-solid fa-bolt-lightning"></i></div>
+                    <span>Electricity</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Transactions -->
+<div class="table-card mt-4">
+    <div class="table-card-header">
+        <h6 class="section-title mb-0">Recent Transactions</h6>
+        <a href="{% url 'transactions' %}" class="link-view-all">View All <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+    <div class="table-responsive">
+        <table class="table app-table mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Service</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for txn in recent_transactions %}
+                <tr>
+                    <td>{{ txn.created_at|date:"M d, Y H:i" }}</td>
+                    <td>{{ txn.get_service_display }}</td>
+                    <td>₦{{ txn.amount|floatformat:2 }}</td>
+                    <td><span class="status-badge status-{{ txn.status }}">{{ txn.get_status_display }}</span></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-center text-muted py-4">No transactions yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyAccountNumber() {
+    const text = document.getElementById('accountNumber').innerText;
+    navigator.clipboard.writeText(text).then(() => showToast('Account number copied!', 'success'));
+}
+</script>
+{% endblock %}

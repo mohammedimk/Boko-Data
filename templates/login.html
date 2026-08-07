@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Login - VTU Hub{% endblock %}
+{% block auth_content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-brand">
+            <i class="fa-solid fa-bolt"></i> VTU<strong>Hub</strong>
+        </div>
+        <h4 class="auth-heading">Welcome back</h4>
+        <p class="auth-sub">Log in to manage your wallet and services.</p>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Username or Email</label>
+                {{ form.username }}
+                {% if form.username.errors %}<div class="field-error">{{ form.username.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                {{ form.password }}
+                {% if form.password.errors %}<div class="field-error">{{ form.password.errors.0 }}</div>{% endif %}
+            </div>
+            {% if form.non_field_errors %}
+                <div class="field-error mb-3">{{ form.non_field_errors.0 }}</div>
+            {% endif %}
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <a href="{% url 'password_reset' %}" class="auth-link small">Forgot password?</a>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 btn-auth">
+                <i class="fa-solid fa-right-to-bracket"></i> Login
+            </button>
+        </form>
+        <p class="auth-footer">Don't have an account? <a href="{% url 'register' %}">Create one</a></p>
+    </div>
+</div>
+{% endblock %}

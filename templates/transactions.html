@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Transactions - VTU Hub{% endblock %}
+{% block page_title %}Transactions{% endblock %}
+{% block content %}
+
+<div class="table-card">
+    <div class="table-card-header flex-wrap gap-2">
+        <h6 class="section-title mb-0">All Transactions</h6>
+        <div class="filter-chips">
+            <a href="{% url 'transactions' %}" class="chip {% if not service_filter %}chip-active{% endif %}">All</a>
+            {% for value, label in service_choices %}
+            <a href="?service={{ value }}" class="chip {% if service_filter == value %}chip-active{% endif %}">{{ label }}</a>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table app-table mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Reference</th>
+                    <th>Service</th>
+                    <th>Provider</th>
+                    <th>Recipient</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for txn in transactions %}
+                <tr>
+                    <td>{{ txn.created_at|date:"M d, Y H:i" }}</td>
+                    <td class="small text-muted">{{ txn.reference }}</td>
+                    <td>{{ txn.get_service_display }}</td>
+                    <td>{{ txn.provider|default:"-" }}</td>
+                    <td>{{ txn.recipient }}</td>
+                    <td>₦{{ txn.amount|floatformat:2 }}</td>
+                    <td><span class="status-badge status-{{ txn.status }}">{{ txn.get_status_display }}</span></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center text-muted py-4">No transactions found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

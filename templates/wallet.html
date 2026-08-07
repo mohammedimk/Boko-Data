@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Wallet - VTU Hub{% endblock %}
+{% block page_title %}Wallet{% endblock %}
+{% block content %}
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="form-card">
+            <h6 class="section-title">Fund Your Wallet</h6>
+            <p class="text-muted small">Pay securely via Paystack (Test Mode).</p>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Amount (₦)</label>
+                    {{ fund_form.amount }}
+                    {% if fund_form.amount.errors %}<div class="field-error">{{ fund_form.amount.errors.0 }}</div>{% endif %}
+                </div>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fa-solid fa-credit-card"></i> Proceed to Pay
+                </button>
+            </form>
+
+            <hr class="my-4">
+            <h6 class="section-title">Or Transfer Directly</h6>
+            <div class="account-row bg-light-card">
+                <div>
+                    <span class="account-bank">{{ profile.allocated_bank_name }}</span>
+                    <div class="account-number" id="accountNumber2">{{ profile.allocated_account_number }}</div>
+                    <span class="account-name">{{ profile.allocated_account_name }}</span>
+                </div>
+                <button class="btn btn-sm btn-copy" onclick="copyAcct2()"><i class="fa-regular fa-copy"></i> Copy</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="table-card">
+            <div class="table-card-header">
+                <h6 class="section-title mb-0">Wallet Funding History</h6>
+            </div>
+            <div class="table-responsive">
+                <table class="table app-table mb-0">
+                    <thead>
+                        <tr><th>Date</th><th>Reference</th><th>Amount</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for txn in wallet_transactions %}
+                        <tr>
+                            <td>{{ txn.created_at|date:"M d, Y H:i" }}</td>
+                            <td class="small text-muted">{{ txn.reference }}</td>
+                            <td>₦{{ txn.amount|floatformat:2 }}</td>
+                            <td><span class="status-badge status-{{ txn.status }}">{{ txn.get_status_display }}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-center text-muted py-4">No wallet funding yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+function copyAcct2() {
+    const text = document.getElementById('accountNumber2').innerText;
+    navigator.clipboard.writeText(text).then(() => showToast('Account number copied!', 'success'));
+}
+</script>
+{% endblock %}

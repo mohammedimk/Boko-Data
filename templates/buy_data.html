@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Buy Data - VTU Hub{% endblock %}
+{% block page_title %}Buy Data{% endblock %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="form-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="section-title mb-0">Buy Data Bundle</h6>
+                <span class="balance-chip">Balance: ₦{{ profile.wallet_balance|floatformat:2 }}</span>
+            </div>
+
+            <form method="post" id="dataForm">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Network</label>
+                    {{ form.network }}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Available Plans</label>
+                    <div id="plansGrid" class="plans-grid">
+                        <div class="text-muted small py-3 text-center w-100" id="plansLoading">
+                            <i class="fa-solid fa-spinner fa-spin"></i> Loading plans...
+                        </div>
+                    </div>
+                    {{ form.plan_id }}
+                    <div id="planError" class="field-error d-none">Please select a data plan.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Recipient Phone Number</label>
+                    {{ form.phone_number }}
+                    {% if form.phone_number.errors %}<div class="field-error">{{ form.phone_number.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="selected-plan-summary d-none" id="selectedSummary">
+                    <span>Selected Plan:</span> <strong id="selectedPlanName"></strong>
+                    <span class="float-end">₦<span id="selectedPlanPrice"></span></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 mt-2" id="buyBtn">
+                    <i class="fa-solid fa-wifi"></i> Buy Data
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/buy_data.js' %}"></script>
+{% endblock %}

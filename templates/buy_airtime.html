@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Buy Airtime - VTU Hub{% endblock %}
+{% block page_title %}Buy Airtime{% endblock %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="form-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="section-title mb-0">Buy Airtime</h6>
+                <span class="balance-chip">Balance: ₦{{ profile.wallet_balance|floatformat:2 }}</span>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Network</label>
+                        {{ form.network }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Type</label>
+                        {{ form.airtime_type }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Recipient Phone Number</label>
+                    {{ form.phone_number }}
+                    {% if form.phone_number.errors %}<div class="field-error">{{ form.phone_number.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Amount (₦)</label>
+                    {{ form.amount }}
+                    {% if form.amount.errors %}<div class="field-error">{{ form.amount.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="quick-amounts mb-3">
+                    <button type="button" class="btn btn-sm btn-quick-amt" data-amt="100">₦100</button>
+                    <button type="button" class="btn btn-sm btn-quick-amt" data-amt="200">₦200</button>
+                    <button type="button" class="btn btn-sm btn-quick-amt" data-amt="500">₦500</button>
+                    <button type="button" class="btn btn-sm btn-quick-amt" data-amt="1000">₦1000</button>
+                    <button type="button" class="btn btn-sm btn-quick-amt" data-amt="2000">₦2000</button>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fa-solid fa-signal"></i> Buy Airtime
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+document.querySelectorAll('.btn-quick-amt').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelector('input[name="amount"]').value = btn.dataset.amt;
+    });
+});
+</script>
+{% endblock %}
