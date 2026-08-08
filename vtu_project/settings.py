@@ -19,7 +19,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # os.environ, so every os.environ.get(...) call below picks them up
 # automatically. In production you can skip the .env file entirely and
 # set real environment variables on the server instead.
-load_dotenv(BASE_DIR / '.env')
+#load_dotenv(BASE_DIR / '.env')
+load_dotenv(BASE_DIR / '.env', override=True)
 
 # ------------------------------------------------------------------
 # Security
@@ -40,10 +41,14 @@ ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').sp
 
 
 # Hardcoded to bypass environment variable parsing issues entirely
+# CSRF_TRUSTED_ORIGINS = [
+#     "https://unseeing-overload-mace.ngrok-free.dev",
+#     "https://*.ngrok-free.dev",
+#     "https://*.ngrok-free.app",
+# ]
+
 CSRF_TRUSTED_ORIGINS = [
-    "https://unseeing-overload-mace.ngrok-free.dev",
-    "https://*.ngrok-free.dev",
-    "https://*.ngrok-free.app",
+    origin.strip() for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()
 ]
 
 
@@ -197,6 +202,7 @@ CHEAPDATAHUB_BASE_URL = os.environ.get('CHEAPDATAHUB_BASE_URL', 'https://cheapda
 # When True, the platform uses the local mock provider instead of making
 # real HTTP calls. Flip to False once real CheapDataHub credentials are set.
 VTU_USE_MOCK_PROVIDER = os.environ.get('VTU_USE_MOCK_PROVIDER', 'True') == 'True'
+#VTU_USE_MOCK_PROVIDER=False
 
 # ------------------------------------------------------------------
 # Logging
