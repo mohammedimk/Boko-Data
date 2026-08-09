@@ -8,7 +8,10 @@ never need to be hard-coded or committed to version control.
 import os
 from pathlib import Path
 
+
 from dotenv import load_dotenv
+
+import dj_database_url
 
 # ------------------------------------------------------------------
 # Base
@@ -22,15 +25,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 #load_dotenv(BASE_DIR / '.env')
 load_dotenv(BASE_DIR / '.env', override=True)
 
-database_url = os.environ.get('DATABASE_URL')
 
 # ------------------------------------------------------------------
 # Security
 # ------------------------------------------------------------------
+
+
 SECRET_KEY = os.environ.get(
     'DJANGO_SECRET_KEY',
     'django-insecure-dev-only-key-change-this-in-production-8f3k2m9x'
 )
+
 
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
@@ -111,24 +116,40 @@ ASGI_APPLICATION = 'vtu_project.asgi.application'
 # SQLite for development. Switch to PostgreSQL in production by
 # setting the DATABASE_URL-style environment variables below.
 # ------------------------------------------------------------------
-if os.environ.get('POSTGRES_DB'):
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('POSTGRES_DB'),
-            'USER': os.environ.get('POSTGRES_USER'),
-            'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
-            'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
-            'PORT': os.environ.get('POSTGRES_PORT', '5432'),
-        }
-    }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+# if os.environ.get('POSTGRES_DB'):
+#     DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.postgresql',
+#             'NAME': os.environ.get('POSTGRES_DB'),
+#             'USER': os.environ.get('POSTGRES_USER'),
+#             'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
+#             'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
+#             'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+#         }
+#     }
+# else:
+#     DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.sqlite3',
+#             'NAME': BASE_DIR / 'db.sqlite3',
+#         }
+#     }
+
+
+
+
+DATABASES = {
+    'default': dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+        ssl_require=True
+    )
+}
+
+
+
+
+
 
 # ------------------------------------------------------------------
 # Password validation
