@@ -82,6 +82,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -172,9 +173,31 @@ USE_TZ = True
 # ------------------------------------------------------------------
 # Static & media files
 # ------------------------------------------------------------------
+# STATIC_URL = '/static/'
+# STATICFILES_DIRS = [BASE_DIR / 'static']
+# STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+
+
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# Absolute path where collectstatic will gather all static files
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Extra places for collectstatic to find static files (if you have local static folder)
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+
+# Tell WhiteNoise to compress and cache static files
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
