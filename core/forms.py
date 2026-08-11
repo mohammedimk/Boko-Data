@@ -29,13 +29,18 @@ METER_TYPE_CHOICES = [
     ('postpaid', 'Postpaid'),
 ]
 
+
 DISCO_CHOICES = [
-    ('IKEDC', 'Ikeja Electric'),
-    ('EKEDC', 'Eko Electric'),
-    ('AEDC', 'Abuja Electric'),
-    ('PHED', 'Port Harcourt Electric'),
-    ('KEDCO', 'Kano Electric'),
-    ('IBEDC', 'Ibadan Electric'),
+    ('1', 'Abuja Electric (AEDC)'),
+    ('2', 'Eko Electric (EKEDC)'),
+    ('3', 'Ibadan Electric (IBEDC)'),
+    ('4', 'Ikeja Electric (IKEDC)'),
+    ('5', 'Kaduna Electric'),
+    ('6', 'Port Harcourt Electric'),
+    ('7', 'Jos Electricity Distribution PLC (JEDplc)'),
+    ('8', 'Enugu Electric'),
+    ('9', 'Yola Electric'),
+    ('10', 'Benin Electric'),
 ]
 
 

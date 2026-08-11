@@ -327,6 +327,55 @@ class CheapDataHubAPI:
             }
         return self._post('cable/validate', {'provider': provider, 'smartcard_number': smartcard_number})
 
+    # def pay_cable(self, provider: str, smartcard_number: str, bouquet_id: str, phone_number: str) -> dict:
+    #     """
+    #     NOTE: bouquet existence/pricing is validated against ServicePlan in
+    #     views.py BEFORE this method runs, so the mock branch only simulates
+    #     success.
+    #     """
+    #     if self.use_mock:
+    #         return {
+    #             'success': True,
+    #             'reference': self._mock_reference(),
+    #             'message': f"Bouquet {bouquet_id} activated for card {smartcard_number}.",
+    #         }
+
+    #     return self._post('cable/purchase/', {
+    #         'plan_id': bouquet_id,
+    #         'cardnumber': smartcard_number,
+    #         'phone': phone_number,
+    #     })
+
+    # # -- Electricity -----------------------------------------------------
+    # def validate_meter(self, disco: str, meter_number: str, meter_type: str) -> dict:
+    #     if not meter_number.isdigit() or len(meter_number) < 10:
+    #         return {'success': False, 'message': 'Invalid meter number.'}
+    #     if self.use_mock:
+    #         seed = int(hashlib.sha256(meter_number.encode()).hexdigest(), 16) % 1000
+    #         return {
+    #             'success': True,
+    #             'customer_name': f"METER-CUSTOMER-{seed:03d}",
+    #             'address': f"No. {seed % 90 + 1} Independence Layout",
+    #             'meter_number': meter_number,
+    #         }
+    #     return self._post('electricity/validate', {
+    #         'disco': disco, 'meter_number': meter_number, 'meter_type': meter_type,
+    #     })
+
+    # def pay_electricity(self, disco: str, meter_number: str, meter_type: str, amount, phone_number: str) -> dict:
+    #     if self.use_mock:
+    #         token = '-'.join(''.join(random.choices(string.digits, k=4)) for _ in range(5))
+    #         return {
+    #             'success': True,
+    #             'reference': self._mock_reference(),
+    #             'token': token,
+    #             'message': f"Token generated for meter {meter_number}.",
+    #         }
+    #     return self._post('electricity/pay', {
+    #         'disco': disco, 'meter_number': meter_number, 'meter_type': meter_type,
+    #         'amount': str(amount), 'phone_number': phone_number,
+    #     })
+
     def pay_cable(self, provider: str, smartcard_number: str, bouquet_id: str, phone_number: str) -> dict:
         """
         NOTE: bouquet existence/pricing is validated against ServicePlan in
@@ -340,7 +389,9 @@ class CheapDataHubAPI:
                 'message': f"Bouquet {bouquet_id} activated for card {smartcard_number}.",
             }
 
+        cable_provider_id_map = {'GOTV': 1, 'DSTV': 2, 'STARTIMES': 3}
         return self._post('cable/purchase/', {
+            'provider_id': cable_provider_id_map.get(provider.upper()),
             'plan_id': bouquet_id,
             'cardnumber': smartcard_number,
             'phone': phone_number,
@@ -348,6 +399,7 @@ class CheapDataHubAPI:
 
     # -- Electricity -----------------------------------------------------
     def validate_meter(self, disco: str, meter_number: str, meter_type: str) -> dict:
+        """`disco` is now the numeric disco_id (e.g. '4' for Ikeja Electric), matching forms.py DISCO_CHOICES."""
         if not meter_number.isdigit() or len(meter_number) < 10:
             return {'success': False, 'message': 'Invalid meter number.'}
         if self.use_mock:
@@ -359,10 +411,11 @@ class CheapDataHubAPI:
                 'meter_number': meter_number,
             }
         return self._post('electricity/validate', {
-            'disco': disco, 'meter_number': meter_number, 'meter_type': meter_type,
+            'disco_id': disco, 'meter_number': meter_number, 'meter_type': meter_type,
         })
 
     def pay_electricity(self, disco: str, meter_number: str, meter_type: str, amount, phone_number: str) -> dict:
+        """`disco` is now the numeric disco_id (e.g. '4' for Ikeja Electric), matching forms.py DISCO_CHOICES."""
         if self.use_mock:
             token = '-'.join(''.join(random.choices(string.digits, k=4)) for _ in range(5))
             return {
@@ -371,12 +424,10 @@ class CheapDataHubAPI:
                 'token': token,
                 'message': f"Token generated for meter {meter_number}.",
             }
-        return self._post('electricity/pay', {
-            'disco': disco, 'meter_number': meter_number, 'meter_type': meter_type,
+        return self._post('electricity/purchase/', {
+            'disco_id': disco, 'meter_number': meter_number, 'meter_type': meter_type,
             'amount': str(amount), 'phone_number': phone_number,
         })
-
-
 # ======================================================================
 # Paystack Client
 # ======================================================================
