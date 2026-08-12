@@ -750,6 +750,64 @@ def cable_view(request):
 # ======================================================================
 # Electricity Bills
 # ======================================================================
+# @profile_required
+# def electricity_view(request):
+#     profile = request.user.profile
+
+#     if request.method == 'POST':
+#         form = ElectricityForm(request.POST)
+#         if form.is_valid():
+#             disco = form.cleaned_data['disco']
+#             meter_type = form.cleaned_data['meter_type']
+#             meter_number = form.cleaned_data['meter_number']
+#             amount = form.cleaned_data['amount']
+#             phone_number = form.cleaned_data['phone_number']
+
+#             if not profile.has_sufficient_balance(amount):
+#                 messages.error(request, "Insufficient Wallet Balance. Please fund your wallet.")
+#                 return redirect('electricity')
+
+#             with db_transaction.atomic():
+#                 profile_locked = UserProfile.objects.select_for_update().get(pk=profile.pk)
+#                 if not profile_locked.has_sufficient_balance(amount):
+#                     messages.error(request, "Insufficient Wallet Balance. Please fund your wallet.")
+#                     return redirect('electricity')
+
+#                 profile_locked.debit_wallet(amount)
+#                 api_result = vtu_api.pay_electricity(disco, meter_number, meter_type, amount, phone_number)
+
+#                 txn = Transaction.objects.create(
+#                     user=request.user,
+#                     service=Transaction.Service.ELECTRICITY,
+#                     provider=disco,
+#                     amount=amount,
+#                     status=Transaction.Status.SUCCESS if api_result.get('success') else Transaction.Status.FAILED,
+#                     extra_data={
+#                         'meter_number': meter_number, 'meter_type': meter_type,
+#                         'phone': phone_number, 'token': api_result.get('token', ''),
+#                     },
+#                     api_response=api_result,
+#                 )
+
+#                 if not api_result.get('success'):
+#                     profile_locked.credit_wallet(amount)
+#                     messages.error(request, api_result.get('message', 'Electricity payment failed. Your wallet has been refunded.'))
+#                     return redirect('electricity')
+
+#             messages.success(request, f"Payment successful! Token: {api_result.get('token', 'N/A')}")
+#             logger.info("Electricity payment success: user=%s ref=%s", request.user.username, txn.reference)
+#             return redirect('transactions')
+#         else:
+#             messages.error(request, "Please correct the errors in the form.")
+#     else:
+#         form = ElectricityForm()
+
+#     return render(request, 'electricity.html', {'form': form, 'profile': profile})
+
+
+# ======================================================================
+# Electricity Bills
+# ======================================================================
 @profile_required
 def electricity_view(request):
     profile = request.user.profile
@@ -783,8 +841,10 @@ def electricity_view(request):
                     amount=amount,
                     status=Transaction.Status.SUCCESS if api_result.get('success') else Transaction.Status.FAILED,
                     extra_data={
-                        'meter_number': meter_number, 'meter_type': meter_type,
-                        'phone': phone_number, 'token': api_result.get('token', ''),
+                        'meter_number': meter_number,
+                        'meter_type': meter_type,
+                        'phone': phone_number,
+                        'token': api_result.get('token', ''),
                     },
                     api_response=api_result,
                 )
@@ -794,7 +854,7 @@ def electricity_view(request):
                     messages.error(request, api_result.get('message', 'Electricity payment failed. Your wallet has been refunded.'))
                     return redirect('electricity')
 
-            messages.success(request, f"Payment successful! Token: {api_result.get('token', 'N/A')}")
+            messages.success(request, f"Electricity payment of ₦{amount} for meter {meter_number} successful!")
             logger.info("Electricity payment success: user=%s ref=%s", request.user.username, txn.reference)
             return redirect('transactions')
         else:

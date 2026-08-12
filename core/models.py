@@ -331,14 +331,74 @@ class ServiceCommission(models.Model):
 
 
 
+# class WebAuthnCredential(models.Model):
+#     """A registered biometric/security-key credential for passwordless login."""
+#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='webauthn_credentials')
+#     credential_id = models.CharField(max_length=255, unique=True)
+#     public_key = models.TextField()
+#     sign_count = models.PositiveIntegerField(default=0)
+#     nickname = models.CharField(max_length=50, blank=True, default='', help_text="e.g. 'iPhone Face ID', 'Laptop Fingerprint'")
+#     created_at = models.DateTimeField(auto_now_add=True)
+
+#     def __str__(self):
+#         return f"{self.user.username} - {self.nickname or self.credential_id[:12]}"
+
+
+
+
+
+from django.db import models
+from django.conf import settings
+
+
 class WebAuthnCredential(models.Model):
     """A registered biometric/security-key credential for passwordless login."""
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='webauthn_credentials')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='webauthn_credentials'
+    )
     credential_id = models.CharField(max_length=255, unique=True)
     public_key = models.TextField()
     sign_count = models.PositiveIntegerField(default=0)
-    nickname = models.CharField(max_length=50, blank=True, default='', help_text="e.g. 'iPhone Face ID', 'Laptop Fingerprint'")
+    nickname = models.CharField(
+        max_length=50,
+        blank=True,
+        default='',
+        help_text="e.g. 'iPhone Face ID', 'Laptop Fingerprint'"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.user.username} - {self.nickname or self.credential_id[:12]}"
+
+
+# # ======================================================================
+# # Transaction Service Proxy Models (Required for separate Admin Tabs)
+# # ======================================================================
+# class DataPurchase(Transaction):
+#     class Meta:
+#         proxy = True
+#         verbose_name = "Data Purchase"
+#         verbose_name_plural = "Data Purchases"
+
+
+# class AirtimePurchase(Transaction):
+#     class Meta:
+#         proxy = True
+#         verbose_name = "Airtime Purchase"
+#         verbose_name_plural = "Airtime Purchases"
+
+
+# class CablePayment(Transaction):
+#     class Meta:
+#         proxy = True
+#         verbose_name = "Cable TV Payment"
+#         verbose_name_plural = "Cable TV Payments"
+
+
+# class ElectricityPayment(Transaction):
+#     class Meta:
+#         proxy = True
+#         verbose_name = "Electricity Payment"
+#         verbose_name_plural = "Electricity Payments"
