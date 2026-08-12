@@ -309,3 +309,8 @@ if not DEBUG:
     SECURE_HSTS_PRELOAD = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
+
+
+WEBAUTHN_RP_ID = os.environ.get('WEBAUTHN_RP_ID', 'boko-data.onrender.com')
+WEBAUTHN_RP_NAME = 'Boko-Data'
+WEBAUTHN_ORIGIN = os.environ.get('WEBAUTHN_ORIGIN', 'https://boko-data.onrender.com')

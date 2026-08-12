@@ -36,6 +36,65 @@ vtu_api = CheapDataHubAPI()
 paystack = PaystackClient()
 
 
+
+
+
+import json
+from django.contrib.auth.models import User
+from .webauthn_utils import (
+    build_registration_options, verify_registration, options_to_json,
+    build_authentication_options, verify_authentication,
+)
+
+
+@login_required
+@require_GET
+def webauthn_register_options(request):
+    options, challenge = build_registration_options(request.user)
+    request.session['webauthn_reg_challenge'] = challenge
+    return JsonResponse(json.loads(options_to_json(options)))
+
+
+@login_required
+@require_POST
+def webauthn_register_verify(request):
+    challenge = request.session.pop('webauthn_reg_challenge', None)
+    if not challenge:
+        return JsonResponse({'success': False, 'message': 'Registration session expired. Try again.'}, status=400)
+    try:
+        credential = json.loads(request.body)
+        nickname = request.POST.get('nickname', '') or credential.pop('nickname', '')
+        verify_registration(request.user, credential, challenge, nickname)
+        return JsonResponse({'success': True, 'message': 'Biometric login enabled.'})
+    except Exception as exc:
+        logger.error("WebAuthn registration failed for user=%s: %s", request.user.username, exc)
+        return JsonResponse({'success': False, 'message': 'Could not register this device.'}, status=400)
+
+
+@require_GET
+def webauthn_login_options(request):
+    username = request.GET.get('username', '').strip()
+    user = User.objects.filter(username=username).first() if username else None
+    options, challenge = build_authentication_options(user)
+    request.session['webauthn_auth_challenge'] = challenge
+    return JsonResponse(json.loads(options_to_json(options)))
+
+
+@require_POST
+def webauthn_login_verify(request):
+    challenge = request.session.pop('webauthn_auth_challenge', None)
+    if not challenge:
+        return JsonResponse({'success': False, 'message': 'Login session expired. Try again.'}, status=400)
+    try:
+        credential = json.loads(request.body)
+        user = verify_authentication(credential, challenge)
+        if not user:
+            return JsonResponse({'success': False, 'message': 'Unrecognized device.'}, status=400)
+        login(request, user)
+        return JsonResponse({'success': True, 'redirect': '/'})
+    except Exception as exc:
+        logger.error("WebAuthn login failed: %s", exc)
+        return JsonResponse({'success': False, 'message': 'Biometric login failed.'}, status=400)
 # ======================================================================
 # Authentication
 # ======================================================================

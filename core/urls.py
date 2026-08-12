@@ -46,6 +46,11 @@ urlpatterns = [
     path('ajax/validate-decoder/', views.ajax_validate_decoder, name='ajax_validate_decoder'),
     path('ajax/validate-meter/', views.ajax_validate_meter, name='ajax_validate_meter'),
     
+    path('webauthn/register/options/', views.webauthn_register_options, name='webauthn_register_options'),
+    path('webauthn/register/verify/', views.webauthn_register_verify, name='webauthn_register_verify'),
+    path('webauthn/login/options/', views.webauthn_login_options, name='webauthn_login_options'),
+    path('webauthn/login/verify/', views.webauthn_login_verify, name='webauthn_login_verify'),
+    
      # Paystack calls this URL directly (server-to-server), not the browser.
     # Configure this exact path as your webhook URL in the Paystack dashboard,
     # e.g. https://yourdomain.com/paystack/webhook/

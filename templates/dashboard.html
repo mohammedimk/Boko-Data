@@ -14,6 +14,14 @@
                 </div>
                 <a href="{% url 'wallet' %}" class="btn btn-light btn-fund"><i class="fa-solid fa-plus"></i> Fund Wallet</a>
             </div>
+
+
+            <button type="button" class="btn btn-sm btn-copy mt-2" onclick="registerBiometric(prompt('Name this device (e.g. My Phone):'))">
+                <i class="fa-solid fa-fingerprint"></i> Enable Biometric Login
+            </button>
+
+
+
             <hr class="wallet-divider">
             <div class="wallet-account">
                 <p class="wallet-label mb-1">Your Virtual Bank Account</p>
@@ -92,7 +100,9 @@
 
 {% endblock %}
 
+
 {% block extra_js %}
+<script src="{% static 'js/webauthn.js' %}"></script>
 <script>
 function copyAccountNumber() {
     const text = document.getElementById('accountNumber').innerText;
