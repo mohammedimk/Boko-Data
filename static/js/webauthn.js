@@ -1,3 +1,23 @@
+// Helper to retrieve Django CSRF token
+function getCsrfToken() {
+    // First try reading from the rendered {% csrf_token %} input field
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (csrfInput && csrfInput.value) {
+        return csrfInput.value;
+    }
+    // Fallback: extract from browser cookies
+    const cookieValue = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+        
+    return cookieValue || '';
+}
+
+
+
+
+
 function bufferDecode(value) {
     return Uint8Array.from(atob(value.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
 }
