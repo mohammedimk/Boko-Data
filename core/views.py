@@ -43,26 +43,87 @@ paystack = PaystackClient()
 
 
 
-import json
-from django.contrib.auth.models import User
-from .webauthn_utils import (
-    build_registration_options, verify_registration, options_to_json,
-    build_authentication_options, verify_authentication,
-)
+# import json
+# from django.contrib.auth.models import User
+
+# from .webauthn_utils import (
+#     build_registration_options, verify_registration, options_to_json,
+#     build_authentication_options, verify_authentication,
+# )
+
+# import json
+# import logging
+# from django.http import JsonResponse
+# from django.views.decorators.http import require_POST
+# from django.contrib.auth.decorators import login_required
+# from webauthn import generate_registration_options, verify_registration_response
+# from webauthn.helpers.structs import (
+#     AuthenticatorSelectionCriteria,
+#     UserVerificationRequirement,
+#     PublicKeyCredentialDescriptor,
+# )
+# from webauthn.helpers import bytes_to_base64url, base64url_to_bytes
+# from .models import WebAuthnCredential
+
+# core/webauthn_utils.py
 
 import json
-import logging
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from django.contrib.auth.decorators import login_required
-from webauthn import generate_registration_options, verify_registration_response
+from webauthn import (
+    generate_registration_options,
+    verify_registration_response,
+    generate_authentication_options,
+    verify_authentication_response,
+)
+from webauthn.helpers import bytes_to_base64url, base64url_to_bytes
 from webauthn.helpers.structs import (
     AuthenticatorSelectionCriteria,
     UserVerificationRequirement,
     PublicKeyCredentialDescriptor,
 )
-from webauthn.helpers import bytes_to_base64url, base64url_to_bytes
-from .models import WebAuthnCredential
+
+def build_registration_options(user, rp_id, rp_name, existing_credential_ids=None):
+    """Generates options for WebAuthn credential creation."""
+    exclude_credentials = []
+    if existing_credential_ids:
+        exclude_credentials = [
+            PublicKeyCredentialDescriptor(id=base64url_to_bytes(cid))
+            for cid in existing_credential_ids
+        ]
+
+    options = generate_registration_options(
+        rp_id=rp_id,
+        rp_name=rp_name,
+        user_id=str(user.id).encode('utf-8'),
+        user_name=user.username,
+        user_display_name=f"{user.first_name} {user.last_name}".strip() or user.username,
+        exclude_credentials=exclude_credentials,
+        authenticator_selection=AuthenticatorSelectionCriteria(
+            user_verification=UserVerificationRequirement.PREFERRED,
+        ),
+    )
+    
+    # Return serializable dict/json and base64 challenge string
+    return options, bytes_to_base64url(options.challenge)
+
+
+def verify_registration(credential_payload, expected_challenge_b64, expected_origin, expected_rp_id):
+    """Verifies client response against saved challenge."""
+    expected_challenge_bytes = base64url_to_bytes(expected_challenge_b64)
+    
+    verification = verify_registration_response(
+        credential=credential_payload,
+        expected_challenge=expected_challenge_bytes,
+        expected_origin=expected_origin,
+        expected_rp_id=expected_rp_id,
+    )
+    
+    return {
+        'credential_id': bytes_to_base64url(verification.credential_id),
+        'public_key': bytes_to_base64url(verification.credential_public_key),
+        'sign_count': verification.sign_count,
+    }
+
+
 
 logger = logging.getLogger(__name__)
 RP_NAME = "Boko-Data Hub"
