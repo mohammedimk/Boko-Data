@@ -29,6 +29,10 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
 
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.utils.decorators import method_decorator
+
+
 
 logger = logging.getLogger('core')
 
@@ -131,6 +135,10 @@ def register_view(request):
     return render(request, 'register.html', {'form': form})
 
 
+
+
+
+@method_decorator(ensure_csrf_cookie, name='dispatch')
 class VTULoginView(LoginView):
     template_name = 'login.html'
     authentication_form = LoginForm
@@ -144,6 +152,21 @@ class VTULoginView(LoginView):
     def form_invalid(self, form):
         messages.error(self.request, "Invalid username/email or password.")
         return super().form_invalid(form)
+
+
+# class VTULoginView(LoginView):
+#     template_name = 'login.html'
+#     authentication_form = LoginForm
+#     redirect_authenticated_user = True
+
+#     def form_valid(self, form):
+#         response = super().form_valid(form)
+#         messages.success(self.request, f"Welcome back, {self.request.user.first_name or self.request.user.username}!")
+#         return response
+
+#     def form_invalid(self, form):
+#         messages.error(self.request, "Invalid username/email or password.")
+#         return super().form_invalid(form)
 
 
 @login_required
