@@ -50,29 +50,153 @@ from .webauthn_utils import (
     build_authentication_options, verify_authentication,
 )
 
+import json
+import logging
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from webauthn import generate_registration_options, verify_registration_response
+from webauthn.helpers.structs import (
+    AuthenticatorSelectionCriteria,
+    UserVerificationRequirement,
+    PublicKeyCredentialDescriptor,
+)
+from webauthn.helpers import bytes_to_base64url, base64url_to_bytes
+from .models import WebAuthnCredential
+
+logger = logging.getLogger(__name__)
+RP_NAME = "Boko-Data Hub"
+
+def get_rp_id(request):
+    """Extract domain without port (e.g. 'localhost' or 'boko-data.com')."""
+    return request.get_host().split(':')[0]
+
+def get_origin(request):
+    """Get scheme + host origin for WebAuthn validation."""
+    scheme = 'https' if request.is_secure() else 'http'
+    return f"{scheme}://{request.get_host()}"
+
 
 @login_required
-@require_GET
 def webauthn_register_options(request):
-    options, challenge = build_registration_options(request.user)
-    request.session['webauthn_reg_challenge'] = challenge
-    return JsonResponse(json.loads(options_to_json(options)))
+    """Step 1: Generate challenge and store Base64URL string in session."""
+    user = request.user
+    
+    existing_credentials = WebAuthnCredential.objects.filter(user=user)
+    exclude_credentials = [
+        PublicKeyCredentialDescriptor(id=base64url_to_bytes(cred.credential_id))
+        for cred in existing_credentials
+    ]
+
+    options = generate_registration_options(
+        rp_id=get_rp_id(request),
+        rp_name=RP_NAME,
+        user_id=str(user.id).encode('utf-8'),
+        user_name=user.username,
+        user_display_name=f"{user.first_name} {user.last_name}".strip() or user.username,
+        exclude_credentials=exclude_credentials,
+        authenticator_selection=AuthenticatorSelectionCriteria(
+            user_verification=UserVerificationRequirement.PREFERRED,
+        ),
+    )
+
+    # FIX 1: Convert bytes challenge to Base64URL string so Django Session can serialize it
+    request.session['webauthn_register_challenge'] = bytes_to_base64url(options.challenge)
+
+    return JsonResponse(json.loads(options.json()))
 
 
 @login_required
 @require_POST
 def webauthn_register_verify(request):
-    challenge = request.session.pop('webauthn_reg_challenge', None)
-    if not challenge:
-        return JsonResponse({'success': False, 'message': 'Registration session expired. Try again.'}, status=400)
+    """Step 2: Validate biometric signature and save credential to DB."""
     try:
-        credential = json.loads(request.body)
-        nickname = request.POST.get('nickname', '') or credential.pop('nickname', '')
-        verify_registration(request.user, credential, challenge, nickname)
-        return JsonResponse({'success': True, 'message': 'Biometric login enabled.'})
-    except Exception as exc:
-        logger.error("WebAuthn registration failed for user=%s: %s", request.user.username, exc)
-        return JsonResponse({'success': False, 'message': 'Could not register this device.'}, status=400)
+        body = json.loads(request.body)
+        nickname = body.get('nickname', '').strip() or 'Biometric Key'
+
+        # FIX 2: Retrieve challenge string from session and convert back to bytes
+        challenge_str = request.session.get('webauthn_register_challenge')
+        if not challenge_str:
+            return JsonResponse({
+                'success': False, 
+                'message': 'Registration session expired or challenge missing. Please try again.'
+            }, status=400)
+
+        expected_challenge_bytes = base64url_to_bytes(challenge_str)
+
+        # FIX 3: Isolate pure WebAuthn credential dict (exclude 'nickname')
+        credential_payload = {
+            'id': body['id'],
+            'rawId': body['rawId'],
+            'type': body['type'],
+            'response': body['response'],
+        }
+
+        # Validate with pywebauthn
+        verification = verify_registration_response(
+            credential=credential_payload,
+            expected_challenge=expected_challenge_bytes,
+            expected_origin=get_origin(request),
+            expected_rp_id=get_rp_id(request),
+        )
+
+        # Delete session challenge after single use
+        if 'webauthn_register_challenge' in request.session:
+            del request.session['webauthn_register_challenge']
+
+        # Save or Update Credential in DB
+        cred_id = bytes_to_base64url(verification.credential_id)
+        pub_key = bytes_to_base64url(verification.credential_public_key)
+
+        credential, created = WebAuthnCredential.objects.get_or_create(
+            credential_id=cred_id,
+            defaults={
+                'user': request.user,
+                'public_key': pub_key,
+                'sign_count': verification.sign_count,
+                'nickname': nickname,
+            }
+        )
+
+        if not created:
+            credential.user = request.user
+            credential.public_key = pub_key
+            credential.sign_count = verification.sign_count
+            credential.nickname = nickname
+            credential.save()
+
+        return JsonResponse({'success': True, 'message': 'Biometric key registered successfully!'})
+
+    except Exception as e:
+        logger.exception("WebAuthn Registration Error")
+        return JsonResponse({'success': False, 'message': f'Registration failed: {str(e)}'}, status=400)
+
+
+
+
+
+# @login_required
+# @require_GET
+# def webauthn_register_options(request):
+#     options, challenge = build_registration_options(request.user)
+#     request.session['webauthn_reg_challenge'] = challenge
+#     return JsonResponse(json.loads(options_to_json(options)))
+
+
+# @login_required
+# @require_POST
+# def webauthn_register_verify(request):
+#     challenge = request.session.pop('webauthn_reg_challenge', None)
+#     if not challenge:
+#         return JsonResponse({'success': False, 'message': 'Registration session expired. Try again.'}, status=400)
+#     try:
+#         credential = json.loads(request.body)
+#         nickname = request.POST.get('nickname', '') or credential.pop('nickname', '')
+#         verify_registration(request.user, credential, challenge, nickname)
+#         return JsonResponse({'success': True, 'message': 'Biometric login enabled.'})
+#     except Exception as exc:
+#         logger.error("WebAuthn registration failed for user=%s: %s", request.user.username, exc)
+#         return JsonResponse({'success': False, 'message': 'Could not register this device.'}, status=400)
 
 
 @require_GET
