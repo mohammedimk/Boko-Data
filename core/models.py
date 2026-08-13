@@ -266,7 +266,7 @@ class ServicePlan(models.Model):
     commission_value = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=Decimal('0.00'),
+        default=Decimal('20.00'),
     )
     is_active = models.BooleanField(default=True)
     updated_at = models.DateTimeField(auto_now=True)
