@@ -347,9 +347,34 @@ class ServiceCommission(models.Model):
 
 
 
+# # from django.db import models
+# # from django.conf import settings
+
+
+# class WebAuthnCredential(models.Model):
+#     """A registered biometric/security-key credential for passwordless login."""
+#     user = models.ForeignKey(
+#         settings.AUTH_USER_MODEL,
+#         on_delete=models.CASCADE,
+#         related_name='webauthn_credentials'
+#     )
+#     credential_id = models.CharField(max_length=255, unique=True)
+#     public_key = models.TextField()
+#     sign_count = models.PositiveIntegerField(default=0)
+#     nickname = models.CharField(
+#         max_length=50,
+#         blank=True,
+#         default='',
+#         help_text="e.g. 'iPhone Face ID', 'Laptop Fingerprint'"
+#     )
+#     created_at = models.DateTimeField(auto_now_add=True)
+
+#     def __str__(self):
+#         return f"{self.user.username} - {self.nickname or self.credential_id[:12]}"
+
+
 from django.db import models
 from django.conf import settings
-
 
 class WebAuthnCredential(models.Model):
     """A registered biometric/security-key credential for passwordless login."""
@@ -358,7 +383,7 @@ class WebAuthnCredential(models.Model):
         on_delete=models.CASCADE,
         related_name='webauthn_credentials'
     )
-    credential_id = models.CharField(max_length=255, unique=True)
+    credential_id = models.CharField(max_length=512, unique=True, db_index=True)
     public_key = models.TextField()
     sign_count = models.PositiveIntegerField(default=0)
     nickname = models.CharField(
@@ -369,9 +394,13 @@ class WebAuthnCredential(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'WebAuthn Credential'
+        verbose_name_plural = 'WebAuthn Credentials'
+
     def __str__(self):
         return f"{self.user.username} - {self.nickname or self.credential_id[:12]}"
-
 
 # # ======================================================================
 # # Transaction Service Proxy Models (Required for separate Admin Tabs)
